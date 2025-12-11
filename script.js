@@ -74,6 +74,7 @@
 const mycanvas = document.getElementById('canvas');
 mycanvas.width = window.innerWidth;
 mycanvas.height = window.innerHeight;
+let particleArray = [];
 
 window.addEventListener('resize', function(){
     mycanvas.width = window.innerWidth;
@@ -118,24 +119,18 @@ x += speedX;
 // gerak()
 
 
-const mouse = {
+let mouse = {
     x: null,
     y: null
 }
 
 
-window.addEventListener('click', function(event){
-    mouse.x = event.x;
-    mouse.y = event.y
 
-createCircle()
-      // console.log(event)
-})
 
-console.log(mouse)
 function createCircle(){
-    canvas.clearRect(0,0, mycanvas.width, mycanvas.height);
-    canvas.fillStyle = 'red';
+    // canvas.clearRect(0,0, mycanvas.width, mycanvas.height);
+    let warna = Math.round(Math.random() * 10000)
+    canvas.fillStyle = `#${warna}`;
     canvas.strokeStyle = 'black';
     canvas.beginPath();
     canvas.arc(mouse.x, mouse.y, 10, 0, Math.PI * 2);
@@ -143,9 +138,54 @@ function createCircle(){
     // canvas.stroke();
 }
 
+
+class Particle {
+    constructor(){
+        this.x = Math.random() * mycanvas.width;
+        this.y = Math.random() * mycanvas.height;
+        this.speedX = Math.random() * 3 - 1.5;
+        this.speedY = Math.random() * 3 - 1.5;
+    }
+
+    update(){
+        this.x += this.speedX;
+        this.y += this.speedY;
+    }
+    draw(){
+        canvas.beginPath();
+        canvas.fillStyle = 'red';
+        canvas.arc(this.x, this.y, 20, 0, Math.PI * 2);
+        canvas.fill();
+    }
+}
+
+function init(){
+    for(let i = 0; i < 100; i++){
+        particleArray.push(new Particle());
+    }
+}
+init()
+
+function start(){
+    for(let i = 0; i < particleArray.length; i++){
+        particleArray[i].update();
+        particleArray[i].draw();
+    }
+}
+
+
 window.addEventListener('mousemove', function(event){
+    // const rect = mycanvas.getBoundingClientRect();
     mouse.x = event.x;
     mouse.y = event.y;
-
-    createCircle()
+    // createCircle()
 })
+
+function animate(){
+    canvas.clearRect(0,0, mycanvas.width, mycanvas.height);
+
+    start();
+    requestAnimationFrame(animate)
+}
+animate();
+
