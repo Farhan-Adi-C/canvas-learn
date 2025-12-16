@@ -12,13 +12,90 @@
     #canvas {
       box-shadow: 1px 1px 5px 1px #ddd;
       width: 50%;
-      margin: 50px 0px;
+      margin: 50px 0px 0px 0px;
       background-color: white;
+      padding: 10px;
     }
+  #form {
+  width: 420px;
+  padding: 25px;
+  margin: 30px auto;
+  font-size: 18px;
+}
+
+#form input[type="number"] {
+  width: 100px;
+  height: 35px;
+  font-size: 18px;
+}
+
+.car-option {
+  display: inline-block;
+  margin-right: 15px;
+}
+
+.car-option img {
+  width: 120px;   /* gambar lebih besar */
+  border: 3px solid transparent;
+  cursor: pointer;
+}
+
+.car-option input {
+  display: none;
+}
+
+.car-option input:checked + img {
+  border: 3px solid black;
+}
+
+button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+
   </style>
 </head>
 <body>
+
+
+  <form id="form">
+  <label>
+    Level
+    <select name="level" id="level">
+      <option value="easy">easy</option>
+      <option value="medium">medium</option>
+      <option value="hard">hard</option>
+    </select>
+  </label>
+
+  <p>Pilih Mobil:</p>
+
+  <label class="car-option">
+    <input type="radio" name="car" value="car1.png" checked>
+    <img src="car1.png">
+  </label>
+
+  <label class="car-option">
+    <input type="radio" name="car" value="car2.png">
+    <img src="car2.png">
+  </label>
+
+  <br><br>
+  <button type="submit">Mulai</button>
+</form>
+
+
+  <div id="gameCanvas">
   <canvas id="canvas"></canvas>
+  <h2>Score: <span id="score"></span></h2><br>
+  </div>
+  <!-- <h4>obsX: <span id="obsX"></span></h4>
+  <h4>obsY: <span id="obsY"></span></h4><br>
+  <h4>carX: <span id="carX"></span></h4>
+  <h4>carY: <span id="carY"></span></h4> -->
   <script src="script.js"></script>
 </body>
 </html>

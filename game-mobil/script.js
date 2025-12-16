@@ -35,6 +35,10 @@ window.addEventListener('keydown', (event) => {
     }
 
 })
+setInterval(() => {
+    speedObs += 5;
+}, 5000)
+
 const main = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(car, carX, carY, 300, 200);
@@ -59,10 +63,10 @@ const main = () => {
             obs[i].x > 0 &&
             carX + 200 > obs[i].x &&
             carY < obs[i].y + 300 &&
-            carY  > obs[i].y) {
-                alert('anda kalah')
-                location.reload();
-                cancelAnimationFrame(animationFrame)
+            carY > obs[i].y) {
+            alert('anda kalah')
+            location.reload();
+            cancelAnimationFrame(animationFrame)
         }
     }
     let animationFrame = requestAnimationFrame(main)
@@ -72,11 +76,13 @@ const main = () => {
 
 main()
 
+
+
 window.addEventListener('click', (e) => {
     // console.log('angka random: ' + Math.random() * (canvas.height - obstacle.height))
     // console.log('koordinat y: ' + e.y);
     // console.log('koordinat x: ' + e.x);
-    
+
     console.log(carY)
 
 })
