@@ -51,13 +51,23 @@ const tileMap = [
     "XXXXXXXXXXXXXXXXXXX"
 ];
 
+
+// variable
 let walls = new Set();
 let foods = new Set();
 let ghosts = new Set();
 let pacman;
 
+let score = 0;
+let health = 3;
+let gameOver = false;
+
+
 const directions = ["U", "D", "R", "L"];
 
+
+
+// function onload window
 window.onload = function () {
     board = document.getElementById('board');
     board.width = boardWidth;
@@ -90,23 +100,23 @@ function loadMap() {
             const x = c * tileSize;
             const y = r * tileSize;
 
-            if (tileMapChar == "X") { // wall
+            if (tileMapChar == "X") { 
                 const wall = new Block(wallImage, x, y, tileSize, tileSize);
                 walls.add(wall);
             }
-            else if (tileMapChar == "b") { // blue ghost
+            else if (tileMapChar == "b") { 
                 const ghost = new Block(blueGhostImage, x, y, tileSize, tileSize);
                 ghosts.add(ghost);
             }
-            else if (tileMapChar == "r") { // red ghost
+            else if (tileMapChar == "r") { 
                 const ghost = new Block(redGhostImage, x, y, tileSize, tileSize);
                 ghosts.add(ghost);
             }
-            else if (tileMapChar == "p") { // pink ghost
+            else if (tileMapChar == "p") { 
                 const ghost = new Block(pinkGhostImage, x, y, tileSize, tileSize);
                 ghosts.add(ghost);
             }
-            else if (tileMapChar == "o") { // orange ghost
+            else if (tileMapChar == "o") { 
                 const ghost = new Block(orangeGhostImage, x, y, tileSize, tileSize);
                 ghosts.add(ghost);
             }
@@ -143,6 +153,9 @@ function loadImages() {
 }
 
 function update() {
+    if(gameOver){
+        return;
+    }
     move();
     draw();
     setTimeout(update, 1000 / 20)
@@ -166,6 +179,14 @@ function draw() {
         ctx.rect(food.x, food.y, food.width, food.height);
         ctx.fill();
     }
+
+    ctx.fillStyle = "white";
+    ctx.font = "14px sans-serif";
+    if(gameOver){
+        ctx.fillText("Game Over: " + String(score, tileSize/2, tileSize/2))
+    }else{
+        ctx.fillText("x" + String(health) + " " + String(score), tileSize/2, tileSize/2)
+    }
 }
 
 function move() {
@@ -181,7 +202,14 @@ function move() {
     }
 
     for (let ghost of ghosts.values()) { 
-
+        if(collision(pacman, ghost)){
+            health --;
+            if(health == 0){
+                gameOver = true;
+                return;
+            }
+            resetPositions();
+        }
         if(ghost.y == tileSize * 9 && ghost.direction != "U" && ghost.direction != "D") {
             ghost.updateDirection("U");
         }
@@ -198,9 +226,32 @@ function move() {
             }
         }
     }
+
+    let foodEaten = null;
+    for ( let food of foods.values()){
+        if (collision(pacman, food)){
+            foodEaten = food;
+            score+=10;
+            break;
+        }
+    }
+    foods.delete(foodEaten);
+
+    if(foods.size == 0){
+        resetPositions();
+        loadMap();
+    }
 }
 
 function movePacman(e) {
+    if(gameOver){
+        loadMap();
+        resetPositions();
+        health = 3;
+        gameOver = false;
+        score = 0;
+        update()
+    }
     if (e.code == "ArrowUp" || e.code == "KeyW") {
         pacman.updateDirection("U");
     }
@@ -229,11 +280,22 @@ function movePacman(e) {
 }
 
 function collision (a, b) {
-    return a.x < b.x + b.width &&
-            a.x + a.width > b.x &&
-            a.y < b.y + b.height &&
+    return a.x < b.x + b.width && // sisi kiri a dibagian kiri dari sisi kanan b
+            a.x + a.width > b.x && // sisi kanan a di kanan sisi kiri b
+            a.y < b.y + b.height && // sisi atas y di atas 
             a.y + a.height > b.y
 
+}
+
+function resetPositions(){
+    pacman.reset();
+    pacman.velocityX = 0;
+    pacman.velocityY = 0;
+    for(let ghost of ghosts.values()){
+        ghost.reset();
+        const newDirection = directions[Math.floor(Math.random() * 4)];
+        ghost.updateDirection(newDirection);
+    }
 }
 
 class Block {
@@ -249,6 +311,25 @@ class Block {
         this.velocityX = 0;
         this.velocityY = 0;
         this.direction = "R";
+    }
+
+  updateVelocity() {
+        if (this.direction == "U") {
+            this.velocityX = 0;
+            this.velocityY = -tileSize / 4;
+        }
+        else if (this.direction == "D") {
+            this.velocityX = 0;
+            this.velocityY = tileSize / 4;
+        }
+        else if (this.direction == "R") {
+            this.velocityX = tileSize / 4;
+            this.velocityY = 0;
+        }
+        else if (this.direction == "L") {
+            this.velocityX = -tileSize / 4;
+            this.velocityY = 0;
+        }
     }
 
     updateDirection(direction) {
@@ -269,22 +350,9 @@ class Block {
         }
     }
 
-    updateVelocity() {
-        if (this.direction == "U") {
-            this.velocityX = 0;
-            this.velocityY = -tileSize / 4;
-        }
-        else if (this.direction == "D") {
-            this.velocityX = 0;
-            this.velocityY = tileSize / 4;
-        }
-        else if (this.direction == "R") {
-            this.velocityX = tileSize / 4;
-            this.velocityY = 0;
-        }
-        else if (this.direction == "L") {
-            this.velocityX = -tileSize / 4;
-            this.velocityY = 0;
-        }
+    reset(){
+        this.x = this.startX;
+        this.y = this.startY;
     }
+  
 }
