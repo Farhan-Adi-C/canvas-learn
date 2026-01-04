@@ -18,6 +18,7 @@ let bird = {
 }
 
 let pipeArray = [];
+// pipeWidth : pipeHeight  === 1 : 8
 let pipeWidth = 64;
 let pipeHeight = 512;
 let pipeX = canvasWidth;
@@ -30,6 +31,9 @@ let gravitiy = 0.4;
 let gameOver = false;
 let score = 0;
 let startGame = false;
+let soundGame;
+let speedLevel = 1500;
+let pause = 1;
 
 window.onload = () => {
     canvas = document.getElementById('canvas');
@@ -48,6 +52,7 @@ window.onload = () => {
     topPipeImage.src = 'toppipe.png';
     bottomPipeImage = new Image();
     bottomPipeImage.src = 'bottompipe.png';
+    soundGame = new Audio("bgm_mario.mp3");
 
     if(startGame == false){
         document.addEventListener("keydown", function(e){
@@ -60,15 +65,25 @@ window.onload = () => {
 update()
     document.addEventListener('keydown', moveBird);
 
-setInterval(placePipe, 1500)
+setInterval(placePipe, speedLevel)
 
   
 }
 
 function update(){
     
-    requestAnimationFrame(update);
+       if (pause < 0) {
+        ctx.fillStyle = "white";
+        ctx.font = "30px sans-serif";
+        ctx.fillText("PAUSED", 110, 320);
+        soundGame.pause();
+        cancelAnimationFrame(animationId);
+    }else{
+        
+        let animationId = requestAnimationFrame(update);
+    }
     
+
     if(startGame == false){
         ctx.fillStyle = "white";
         ctx.font = "25px sans-serif";
@@ -79,10 +94,21 @@ function update(){
     }
 
     if(gameOver){
+        soundGame.pause();
+        soundGame.currentTime = 0;
         return;
     }
     if(bird.y > canvas.height ){
         gameOver = true;
+    }
+
+    if(startGame){
+
+        soundGame.play();
+    }
+
+    if(score == 20){
+        speedLevel = 1000;
     }
     ctx.clearRect(0,0, canvas.width, canvas.height);
 
@@ -125,6 +151,10 @@ function placePipe(){
     if(startGame == false){
         return;
     }
+
+    if(pause < 0){
+        return
+    }
     let randomY = pipeY - (pipeHeight/4) - Math.random() * (pipeHeight/2) ;
 
     let topPipe = {
@@ -159,6 +189,14 @@ function moveBird(e){
                 gameOver = false;
                
             }
+    }
+
+    if(e.code == "Escape"){
+        pause *= -1;
+        console.log(pause);
+        if(pause > 0){
+            update();
+        }
     }
    
 }
