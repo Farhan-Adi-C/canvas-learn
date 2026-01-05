@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOMBSKUY</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="welcome">
+        <h1 class="title">BOMBSKUY</h1>
+        <input type="text" placeholder="Input Username" class="username" name="username" ><br>
+       
+        <select name="level" id="level" class="level">
+            <option disabled selected value="easy">Select Level</option>
+            <option value="easy">easy</option>
+            <option value="medium">medium</option>
+            <option value="hard">hard</option>
+        </select>
+        <br>
+
+        <div class="buttonContainerWelcome">
+            <button id="buttonPlay">Play</button>
+            <button id="buttonIntruction">Instruction</button>
+        </div>
+
+    </div>
+
+    <div id="intruction">
+        <button id="closeIntruction">X</button>
+        <h3>How to play game</h3>
+        <ol>
+            <li>Input Username</li>
+            <li>Put the bomb</li>
+            <li>Blow up as many walls as possible</li>
+            <li>Blow up enemies</li>
+            <li>Enjoy!</li>
+        </ol>
+    </div>
+
+    <script src="script.js"></script>
+    
+</body>
+</html>

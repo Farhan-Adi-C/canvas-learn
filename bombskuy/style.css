@@ -1,0 +1,122 @@
+body{
+    text-align: center;
+}
+
+#welcome {
+    position: relative;
+    top: 150px;
+}
+
+.title {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 800;
+    font-size: 50px;
+}
+
+.username {
+  width: 400px;
+  height: 50px;
+  border-radius: 10px;
+  background-color:rgb(184, 86, 21);
+  padding: 5px;
+}
+
+.username::placeholder {
+    color: white;
+    font-size: 17px;
+    margin-left: 50px;
+}
+
+.username:focus{
+    color: white;
+    font-size: 17px;
+}
+
+.level{
+    color: white;
+    background-color: rgb(184, 86, 21);
+    width: 410px;
+    height: 60px;
+    padding: 5px;
+    border-radius: 10px;
+    font-size: 17px;
+    margin-top: 10px;
+}
+
+.level::placeholder {
+    color: white;
+    font-size: 17px;
+}
+
+.buttonContainerWelcome {
+   display: flex;              /* aktifkan flexbox */
+  justify-content: space-between; /* kiri–kanan */
+  align-items: center;
+  width: 410px;               /* samakan dengan input/select */
+    margin: 20px auto;    
+}
+
+#buttonPlay {
+    width:150px;
+    height: 40px;
+    background-color: black;
+    color: white;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+#buttonIntruction {
+    width:150px;
+    height: 40px;
+    background-color: black;
+    color: white;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+#intruction {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+   margin: auto;
+    width: 1000px;
+    height: 700px;
+    background-color: rgba(0,0,0,.8);
+}
+
+#closeIntruction {
+    position: absolute;
+    right: 0;
+    color: white;
+    background-color: red;
+    font-size: 20px;
+    margin: 10px;
+    width: 50px;
+    height: 40px;
+    font-weight: 600;
+    border-radius: 5px;
+}
+
+#intruction h3 {
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 45px;
+    text-align: left;
+    margin-left: 70px;
+}
+
+#intruction ol {
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 25px;
+    text-align: left;
+    margin-left: 70px;
+    font-weight: 100;
+    line-height: 50px;
+}
