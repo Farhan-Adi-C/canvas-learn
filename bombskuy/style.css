@@ -1,10 +1,14 @@
-body{
+body {
     text-align: center;
 }
 
 #welcome {
-    position: relative;
-    top: 150px;
+    /* display: none; */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
 }
 
 .title {
@@ -14,11 +18,13 @@ body{
 }
 
 .username {
-  width: 400px;
-  height: 50px;
-  border-radius: 10px;
-  background-color:rgb(184, 86, 21);
-  padding: 5px;
+    width: 400px;
+    height: 50px;
+    border-radius: 10px;
+    background-color: rgb(184, 86, 21);
+    padding: 5px;
+    margin-top: 20px;
+    border: 2px solid black;
 }
 
 .username::placeholder {
@@ -27,12 +33,12 @@ body{
     margin-left: 50px;
 }
 
-.username:focus{
+.username:focus {
     color: white;
     font-size: 17px;
 }
 
-.level{
+.level {
     color: white;
     background-color: rgb(184, 86, 21);
     width: 410px;
@@ -41,6 +47,7 @@ body{
     border-radius: 10px;
     font-size: 17px;
     margin-top: 10px;
+    border: 2px solid black;
 }
 
 .level::placeholder {
@@ -49,15 +56,15 @@ body{
 }
 
 .buttonContainerWelcome {
-   display: flex;              /* aktifkan flexbox */
-  justify-content: space-between; /* kiri–kanan */
-  align-items: center;
-  width: 410px;               /* samakan dengan input/select */
-    margin: 20px auto;    
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 410px;
+    margin: 20px auto;
 }
 
 #buttonPlay {
-    width:150px;
+    width: 150px;
     height: 40px;
     background-color: black;
     color: white;
@@ -68,7 +75,7 @@ body{
 }
 
 #buttonIntruction {
-    width:150px;
+    width: 150px;
     height: 40px;
     background-color: black;
     color: white;
@@ -84,10 +91,10 @@ body{
     bottom: 0;
     right: 0;
     left: 0;
-   margin: auto;
+    margin: auto;
     width: 1000px;
     height: 700px;
-    background-color: rgba(0,0,0,.8);
+    background-color: rgba(0, 0, 0, .8);
 }
 
 #closeIntruction {
@@ -120,3 +127,8 @@ body{
     font-weight: 100;
     line-height: 50px;
 }
+
+/* 
+#canvas{
+    top: 50%;
+} */
