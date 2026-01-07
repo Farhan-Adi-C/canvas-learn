@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,14 +8,15 @@
     <link rel="stylesheet" href="style.css">
 
 </head>
+
 <body>
 
     <div id="welcome">
         <div>
             <img src="images/logo.png" alt="" width="400">
         </div>
-        <input type="text" placeholder="Input Username" class="username" name="username" ><br>
-       
+        <input type="text" placeholder="Input Username" class="username" name="username"><br>
+
         <select name="level" id="level" class="level">
             <option disabled selected value="selectLevel">Select Level</option>
             <option value="easy">easy</option>
@@ -24,7 +26,7 @@
         <br>
 
         <div class="buttonContainerWelcome">
-            <button id="buttonPlay" >Play</button>
+            <button id="buttonPlay">Play</button>
             <button id="buttonIntruction">Instruction</button>
         </div>
 
@@ -42,8 +44,34 @@
         </ol>
     </div>
 
+    <div id="leaderboard">
+        <h1>leaderboards</h1>
+        <table border="0">
+            <tr>
+                <td>Player Name</td>
+                <td>Time</td>
+                <td><img src="./images/wall_crack.png" alt="" width="35"></td>
+                <td><img src="./images/tnt.png" alt=""></td>
+                <td><img src="./images/ice.png" alt=""></td>
+            </tr>
+            <tr>
+                <td>Farhan</td>
+                <td>01:20</td>
+                <td>4</td>
+                <td>0</td>
+                <td>1</td>
+            </tr>
+        </table>
+
+        <div style="display: flex; justify-content: center;">
+
+            <button id="playagain" style="width: 250px; margin-right: 20px; font-size: 20px; margin-top: 50px; background-color:rgb(184, 86, 21); height: 40px; color: white; text-align: center; border: none; border-radius: 3px; font-weight: 700; ">Play Again</button>
+            <button id="reset" style="width: 250px; font-size: 20px; margin-top: 50px; background-color:rgb(33, 66, 214); height: 40px; color: white; text-align: center; border: none; border-radius: 3px; font-weight: 700; ">Reset</button>
+        </div>
+    </div>
     <canvas id="canvas"></canvas>
     <script src="script.js"></script>
-    
+
 </body>
+
 </html>

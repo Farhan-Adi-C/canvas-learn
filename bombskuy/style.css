@@ -3,7 +3,7 @@ body {
 }
 
 #welcome {
-    /* display: none; */
+    display: none;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -132,3 +132,37 @@ body {
 #canvas{
     top: 50%;
 } */
+
+#leaderboard {
+    width: 1000px;
+    height: 600px;
+    background-color: rgba(63, 63, 63, 1) ;
+    margin: 0 auto;
+    position: absolute;
+    inset: 0;
+    right: 0;
+    left: 0;
+    overflow: auto;
+}
+
+#leaderboard h1 {
+    color: white;
+    font-size: 50px;
+    margin-top: 50px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#leaderboard table {
+    width: 600px;
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    position: relative;
+    align-items: center;
+    margin: 0 auto;
+    font-size: 25px;
+}
+
+#leaderboard td {
+    border-bottom: .5px solid white;
+
+}

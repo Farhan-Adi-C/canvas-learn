@@ -4,7 +4,9 @@ let buttonPlay = document.getElementById("buttonPlay");
 let buttonIntruction = document.getElementById("buttonIntruction");
 let inputUsername = document.querySelector(".username");
 let inputLevel = document.querySelector(".level");
-let username;
+let username = "user";
+let level;
+let win = false;
 
 
 // intruction section
@@ -22,20 +24,29 @@ buttonCloseIntruction.addEventListener("click", () => {
     intructionContainer.style.display = "none";
 })
 
+// leaderboard section
+let leaderboardSection = document.getElementById("leaderboard");
+leaderboardSection.style.display = "none";
+let buttonPlayAgain = document.getElementById("playagain")
+let buttonReset = document.getElementById("reset")
+
+
 // button play
 buttonPlay.addEventListener("click", () => {
     if (!inputUsername.value || inputLevel.value == "selectLevel") {
         alert("isi username dan level terlebih dahulu")
     }
 
-  else{
-      welcomeContainer.style.display = "none";
-      intructionContainer.style.display = "none";
-      canvas.style.display = "inline-block";
-      username = inputUsername.value;
-      getTime();
+    else {
+        welcomeContainer.style.display = "none";
+        intructionContainer.style.display = "none";
+        canvas.style.display = "inline-block";
+        username = inputUsername.value;
+        level = inputLevel.value;
 
-  }
+        getTime();
+
+    }
 
 })
 
@@ -49,7 +60,7 @@ canvas.height = canvasHeight;
 
 let ctx = canvas.getContext("2d");
 canvas.style.backgroundColor = "rgba(63, 63, 63, 1)";
-canvas.style.display = "none";
+// canvas.style.display = "none";
 canvas.style.position = "relative";
 let animationId;
 
@@ -65,6 +76,21 @@ let rowBlock = 9;
 let detik = 0;
 let time;
 let heart = 3;
+let gameOver = false;
+let leaderboard = false;
+let charExplotion = false;
+let wallCrackGet = 0;
+let tntGet = 0;
+let iceGet = 0;
+let heartItemGet = 0;
+let totalTntCount = 3;
+let totalIceCount = 3;
+let totalHeartItemCount = 1;
+let tntItem = [];
+let iceItem = [];
+let heartItem = [];
+
+let numberRandomItem = ["0", "1", "2"]
 
 
 // comp game
@@ -79,7 +105,9 @@ let keys = {
 let dog;
 let walls = [];
 let wallRandomCount = 10;
+let explosions = [];
 let stones = [];
+let bombs = [];
 let roads = [];
 let maps = [
     "XXXXXXXXXXX",
@@ -105,23 +133,81 @@ let charDownImage;
 let charUpImage;
 let charLeftImage;
 let charRightImage;
+let bombImage;
+let explosionImage;
+let heartItemImage;
 
 window.onload = () => {
-    loadImages();
-    loadGames();
-    update();
 
+    startGame()
     document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("keyup", handleKeyUp); 
+    document.addEventListener("keyup", handleKeyUp);
 
-} 
+}
+
+function startGame() {
+    loadImages();
+    if (gameOver) {
+
+        gameOverSection()
+    } else if (leaderboard) {
+        leaderboardSection.style.display = "block";
+        canvas.style.display = "none";
+    } else {
+        loadGames();
+        update();
+
+    }
+}
+
+function gameOverSection() {
+    requestAnimationFrame(gameOverSection);
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    ctx.font = "65px arial";
+    ctx.fillStyle = "white";
+    ctx.fillText("Game Over!", 320, 150);
+    ctx.font = "20px arial";
+    ctx.fillText(`Good job ${username}! your time ${time} with results:`, 300, 200)
+
+
+    ctx.drawImage(wallCrackImage, 250, 250, 50, 50);
+    ctx.font = "40px arial";
+    ctx.fillText(` = ${wallCrackGet}`, 310, 285);
+
+    ctx.drawImage(tntImage, 440, 250, 50, 50);
+    ctx.fillText(` = ${tntGet}`, 500, 285);
+
+    ctx.drawImage(iceImage, 630, 250, 50, 50);
+    ctx.fillText(` = ${iceGet}`, 690, 285);
+
+    ctx.beginPath()
+    ctx.fillStyle = "rgb(184, 86, 21)";
+    ctx.roundRect(270, 370, 190, 40, 5);
+    ctx.fill();
+
+
+    ctx.beginPath()
+    ctx.fillStyle = "rgba(46, 61, 197, 1)";
+    ctx.roundRect(570, 370, 190, 40, 5);
+    ctx.fill();
+
+    ctx.fillStyle = "white";
+    ctx.font = "20px arial";
+    ctx.fillText("Save Score", 310, 395);
+
+    ctx.fillStyle = "white";
+    ctx.font = "20px arial";
+    ctx.fillText("Leaderboard", 610, 395);
+
+}
+
 
 function update() {
     animationId = requestAnimationFrame(update);
     move();
     drawMap();
-    
-if (keys.left) {
+
+    if (keys.left) {
         char.udpateDirection("L");
     } else if (keys.right) {
         char.udpateDirection("R");
@@ -131,6 +217,17 @@ if (keys.left) {
         char.udpateDirection("D");
     } else {
         char.stop();
+    }
+
+    if(iceGet == totalIceCount && tntGet == totalTntCount && wallCrackGet == wallRandomCount !=0){
+        win = true;
+    }
+    if(walls.length == 0 || heart <= 0) {
+        win = false;
+        cancelAnimationFrame(animationId)
+        gameOver = true;
+        startGame();
+        return
     }
 
 }
@@ -158,51 +255,146 @@ function loadImages() {
     charLeftImage.src = "./images/char_left.png";
     charRightImage = new Image();
     charRightImage.src = "./images/char_right.png";
+    bombImage = new Image();
+    bombImage.src = "./images/bomb.png";
+    explosionImage = new Image();
+    explosionImage.src = "./images/duar.jpg";
+    heartItemImage = new Image();
+    heartItemImage.src = "./images/heart.png";
+
 }
 
 function loadGames() {
-   
-    for(let i = 0; i < rowBlock; i++) {
-        for(let j = 0; j < colBlock; j++) {
+
+    for (let i = 0; i < rowBlock; i++) {
+        for (let j = 0; j < colBlock; j++) {
             let row = maps[i];
             let mapBlock = row[j];
-            
+
             let x = j * blockSize;
             let y = i * blockSize;
-            if(mapBlock == "X") {
+            if (mapBlock == "X") {
                 stones.push(new Block("null", x, y, blockSize, blockSize))
             }
-            if(mapBlock == "C") {
-                 char = new Block(charDownImage, x + 5, y + 5, blockSize - 10, blockSize - 10);
+            if (mapBlock == "C") {
+                char = new Block(charDownImage, x + 5, y + 5, blockSize - 10, blockSize - 10);
             }
-            if(mapBlock == " ") {
-                // if(i != 1 && j != 1 || i != 1 && j != 2 || i != 2 && j != 1){
-                // }
-               
+            if (mapBlock == " ") {
+
                 roads.push(new Block("null", x, y, blockSize, blockSize));
             }
         }
 
     }
-    for(let i = 0; i < wallRandomCount; i++) {
-       let random = Math.floor(Math.random() * (roads.length - 5) + 5);
-       let wallRandom = roads[random];
-       walls.push(wallRandom);
+    if (walls.length != wallRandomCount) {
+
+    }
+    for (let i = 0; i < 100; i++) {
+        let random = Math.floor(Math.random() * (roads.length - 5) + 5);
+        let wallAwal = roads[random];
+
+        let cekwWall = walls.includes(wallAwal);
+        if (!cekwWall) {
+            walls.push(wallAwal)
+        }
+
+        // walls.push(wallRandom);
+        if (walls.length == wallRandomCount) {
+            break;
+        }
     }
 
-   
 }
 
 
 function drawMap() {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
     ctx.drawImage(backgroundImage, 0, 0, mapWidth, mapHeight);
     ctx.drawImage(char.image, char.x, char.y, char.width, char.height);
 
-    for(let i = 0; i < walls.length; i++) {
+    for (let explosion of explosions) {
+        let hitBox = {
+            x: explosion.x + 5,
+            y: explosion.y + 5,
+            width: explosion.width - 10,
+            height: explosion.height - 10
+        }
+
+        let hitBoxChar = {
+            x: char.x + 3,
+            y: char.y + 3,
+            width: char.width - 6,
+            height: char.height - 6
+        }
+
+        if (collision(hitBoxChar, hitBox) && !charExplotion) {
+            heart--;
+            charExplotion = true;
+            break;
+        }
+    }
+
+
+    for (let i = walls.length - 1; i >= 0; i--) {
         let wall = walls[i];
-        if(collision(char, wall)){
+        let wallDestroyed = false;
+
+        for (let explosion of explosions) {
+            let hitBox = {
+                x: explosion.x + 5,
+                y: explosion.y + 5,
+                width: explosion.width - 10,
+                height: explosion.height - 10
+            }
+
+
+            if (collision(wall, hitBox)) {
+                wallDestroyed = true;
+                break;
+            }
+
+        }
+
+        if (wallDestroyed) {
+            walls.splice(i, 1);
+
+            for (let a = 0; a < 100; a++) {
+                let numberRandom = Math.floor(Math.random() * 3 + 1);
+                if (numberRandom == 1) {
+                    if (tntItem.length + tntGet != totalTntCount) {
+
+                        tntItem.push(new Block(tntImage, wall.x, wall.y, blockSize, blockSize));
+                        break;
+                    }
+                }
+                if (numberRandom == 2) {
+                    if (iceItem.length + iceGet != totalIceCount) {
+
+                        iceItem.push(new Block(iceImage, wall.x, wall.y, blockSize, blockSize));
+                        break;
+                    }
+                }
+                if (numberRandom == 3) {
+                    if (heartItem.length  != totalHeartItemCount) {
+
+                        heartItem.push(new Block(heartItemImage, wall.x, wall.y, blockSize, blockSize));
+                        break;
+                    }
+                }
+            }
+
+
+            wallCrackGet++;
+            continue;
+        }
+
+        let hitBox = {
+            x: char.x + 3,
+            y: char.y + 3,
+            width: char.width - 6,
+            height: char.height - 6
+        }
+        if (collision(hitBox, wall)) {
             char.y -= char.velocityY;
             char.x -= char.velocityX;
             char.stop();
@@ -210,72 +402,118 @@ function drawMap() {
         ctx.drawImage(wallImage, wall.x, wall.y, wall.width, wall.height);
 
     }
+
+    for(let i = iceItem.length -1; i >= 0 ; i--){
+        let ice = iceItem[i];
+         let hitBox = {
+            x: char.x + 3,
+            y: char.y + 3,
+            width: char.width - 6,
+            height: char.height - 6
+        }
+        if(collision(hitBox, ice)){
+            iceItem.splice(i, 1);
+            iceGet++;
+            continue;
+        }
+        ctx.drawImage(ice.image, ice.x, ice.y, ice.width, ice.height);
+    }
+    for(let i = tntItem.length - 1; i >= 0; i--){
+        let tnt = tntItem[i];
+         let hitBox = {
+            x: char.x + 3,
+            y: char.y + 3,
+            width: char.width - 6,
+            height: char.height - 6
+        }
+        if(collision(hitBox, tnt)){
+            tntItem.splice(i, 1);
+            tntGet++;
+            continue;
+        }
+        ctx.drawImage(tnt.image, tnt.x, tnt.y, tnt.width, tnt.height);
+    }
+    for(let i = heartItem.length - 1; i >= 0; i--){
+        let heartt = heartItem[i];
+        let hitBox = {
+            x: char.x + 3,
+            y: char.y + 3,
+            width: char.width - 6,
+            height: char.height - 6
+        }
+        if(collision(hitBox, heartt)){
+            heartItem.splice(i, 1);
+            heart--;
+            continue;
+        }
+        ctx.drawImage(heartt.image, heartt.x, heartt.y, heartt.width, heartt.height);
+    }
+
+    for (let i = 0; i < bombs.length; i++) {
+        let bomb = bombs[i];
+        ctx.drawImage(bomb.image, bomb.x, bomb.y, bomb.width, bomb.height)
+    }
+
+    for (let explosion of explosions) {
+        ctx.drawImage(explosion.image, explosion.x, explosion.y, explosion.width, explosion.height);
+    }
+
     ctx.drawImage(bombSkuyImage, canvasWidth - (canvasWidth - 705) + 60, 30, 200, 30);
     ctx.fillStyle = "white";
     ctx.font = "22px arial";
-    ctx.fillText(`Player   : ${username}`, canvasWidth - (canvasWidth - 705) + 60, 100 );
-    ctx.fillText(`Time     : ${time || "00:00:00"}`, canvasWidth - (canvasWidth - 705) + 60, 130 );
+    ctx.fillText(`Player   : ${username && "User"}`, canvasWidth - (canvasWidth - 705) + 60, 100);
+    ctx.fillText(`Time     : ${time || "00:00:00"}`, canvasWidth - (canvasWidth - 705) + 60, 130);
 
-    for(let i = 0; i < 3; i++) {
-        if(heart <= i){
-        ctx.drawImage(heartImage, 72, 0, 36, 30, canvasWidth - (canvasWidth - 705) + 60 + (i * 40), 170, 36 , 30 );
-        }else{
+    for (let i = 0; i < 3; i++) {
+        if (heart <= i) {
+            ctx.drawImage(heartImage, 72, 0, 36, 30, canvasWidth - (canvasWidth - 705) + 60 + (i * 40), 170, 36, 30);
+        } else {
 
-            ctx.drawImage(heartImage, 0, 0, 36, 30, canvasWidth - (canvasWidth - 705) + 60 + (i * 40), 170, 36 , 30 );
+            ctx.drawImage(heartImage, 0, 0, 36, 30, canvasWidth - (canvasWidth - 705) + 60 + (i * 40), 170, 36, 30);
         }
     }
 
-    ctx.drawImage(wallCrackImage, canvasWidth - (canvasWidth - 705) + 60, 230, 40, 40 );
+    ctx.drawImage(wallCrackImage, canvasWidth - (canvasWidth - 705) + 60, 230, 40, 40);
     ctx.font = "40px arial";
-    ctx.fillText(`=  4`, canvasWidth - (canvasWidth - 705) + 130, 260 );
+    ctx.fillText(`=  ${wallCrackGet}`, canvasWidth - (canvasWidth - 705) + 130, 260);
 
-    ctx.drawImage(tntImage, canvasWidth - (canvasWidth - 705) + 60, 310, 40, 40 );
-    ctx.fillText(`=  0`, canvasWidth - (canvasWidth - 705) + 130, 340 );
+    ctx.drawImage(tntImage, canvasWidth - (canvasWidth - 705) + 60, 310, 40, 40);
+    ctx.fillText(`=  ${tntGet}`, canvasWidth - (canvasWidth - 705) + 130, 340);
 
 
-    ctx.drawImage(iceImage, canvasWidth - (canvasWidth - 705) + 60, 390, 40, 40 );
-    ctx.fillText(`=  1`, canvasWidth - (canvasWidth - 705) + 130, 420 );
+    ctx.drawImage(iceImage, canvasWidth - (canvasWidth - 705) + 60, 390, 40, 40);
+    ctx.fillText(`=  ${iceGet}`, canvasWidth - (canvasWidth - 705) + 130, 420);
 
 }
 
 
- function move() {
+function move() {
     char.x += char.velocityX;
     char.y += char.velocityY;
 
 
 
-    for(let i = 0; i < stones.length; i++) {
+    for (let i = 0; i < stones.length; i++) {
         let stone = stones[i];
-        if(collision(char, stone)){
+        let hitBox = {
+            x: char.x + 3,
+            y: char.y + 3,
+            width: char.width - 6,
+            height: char.height - 6
+        }
+        if (collision(hitBox, stone)) {
             char.y -= char.velocityY;
             char.x -= char.velocityX;
             char.stop();
         }
     }
 
-       
- }
 
-
-
-function getTime() {
-  setInterval(() => {
-        detik++;
-        let h = Math.floor(detik / 3600);
-        let m =  Math.floor((detik % 3600) / 60 ) ;
-        let s = detik % 60;
-
-        let formatWaktu = String(h).padStart(2, "0") + ":" + 
-                            String(m).padStart(2, "0") + ":" + 
-                            String(s).padStart(2, "0") ;
-        time = formatWaktu;
-
-    }, 1000)
 }
 
+
 class Block {
-    constructor (image, x, y, width, height){
+    constructor(image, x, y, width, height) {
         this.image = image;
         this.x = x;
         this.y = y;
@@ -290,27 +528,27 @@ class Block {
 
     udpateDirection(direction) {
         this.direction = direction;
-        if(direction == "R"){
+        if (direction == "R") {
             this.image = charRightImage;
             this.velocityX = blockSize / 40;
             this.velocityY = 0;
         }
-        if(direction == "L"){
+        if (direction == "L") {
             this.image = charLeftImage
             this.velocityX = -blockSize / 40;
             this.velocityY = 0;
         }
-        if(direction == "U"){
+        if (direction == "U") {
             this.image = charUpImage
             this.velocityX = 0;
             this.velocityY = -blockSize / 40;
         }
-        if(direction == "D"){
+        if (direction == "D") {
             this.image = charDownImage;
             this.velocityX = 0;
             this.velocityY = blockSize / 40;
         }
-        
+
     }
 
     stop() {
@@ -324,53 +562,127 @@ class Block {
 
 function collision(a, b) {
     return a.x < b.x + b.width &&
-    a.x + a.width > b.x &&
-    a.y < b.y + b.height &&
-    a.y + a.height > b.y
+        a.x + a.width > b.x &&
+        a.y < b.y + b.height &&
+        a.y + a.height > b.y
 
 }
 
 
 function handleKeyDown(e) {
-    if(e.code == "KeyA" || e.code == "ArrowLeft"){
+    if (e.code == "KeyB") {
+
+        console.log(tntItem);
+        console.log(iceItem);
+        console.log(heartItem);
+    }
+    if (e.code == "KeyA" || e.code == "ArrowLeft") {
         keys.left = true;
         keys.down = false;
         keys.right = false;
         keys.up = false;
     }
-    if(e.code == "KeyD" || e.code == "ArrowRight"){
+    if (e.code == "KeyD" || e.code == "ArrowRight") {
         keys.right = true
         keys.left = false;
         keys.up = false;
         keys.down = false;
     }
-    if(e.code == "KeyW" || e.code == "ArrowUp"){
+    if (e.code == "KeyW" || e.code == "ArrowUp") {
         keys.up = true;
         keys.down = false;
         keys.right = false;
         keys.left = false;
     }
-    if(e.code == "KeyS" || e.code == "ArrowDown"){
+    if (e.code == "KeyS" || e.code == "ArrowDown") {
         keys.down = true;
         keys.up = false;
         keys.right = false;
         keys.left = false;
     }
-    
+
+    if (e.code == "Space") {
+        if (bombs.length == 0) {
+            let bombKoordinat = snapToGrid(char.x, char.y);
+            bombs.push(new Block(bombImage, bombKoordinat.x, bombKoordinat.y, blockSize, blockSize));
+
+            setTimeout(() => {
+                bombs = [];
+                let explosionUp = new Block(explosionImage, bombKoordinat.x, bombKoordinat.y + blockSize * -1, blockSize, blockSize);
+                let explosionDown = new Block(explosionImage, bombKoordinat.x, bombKoordinat.y + blockSize * 1, blockSize, blockSize);
+                let explosionRight = new Block(explosionImage, bombKoordinat.x + blockSize * 1, bombKoordinat.y, blockSize, blockSize);
+                let explosionLeft = new Block(explosionImage, bombKoordinat.x + blockSize * -1, bombKoordinat.y, blockSize, blockSize);
+                let explosionCenter = new Block(explosionImage, bombKoordinat.x, bombKoordinat.y, blockSize, blockSize);
+                let potentialExplosion = [explosionUp, explosionDown, explosionRight, explosionLeft, explosionCenter];
+
+                potentialExplosion.forEach(exp => {
+
+                    let hitBox = {
+                        x: exp.x + 5,
+                        y: exp.y + 5,
+                        width: exp.width - 10,
+                        height: exp.height - 10
+                    }
+                    let checkStone = stones.some(stone => collision(hitBox, stone));
+                    // let checkWall = walls.some(wall => collision(wall, hitBox));
+
+                    if (!checkStone) {
+                        explosions.push(exp);
+                    }
+
+                })
+
+                setTimeout(() => {
+                    explosions = [];
+                    charExplotion = false;
+                }, 1000);
+
+
+            }, 5000);
+        }
+    }
 }
 
 function handleKeyUp(e) {
-       if(e.code == "KeyA" || e.code == "ArrowLeft"){
+    if (e.code == "KeyA" || e.code == "ArrowLeft") {
         keys.left = false;
     }
-    if(e.code == "KeyD" || e.code == "ArrowRight"){
-       keys.right = false;
+    if (e.code == "KeyD" || e.code == "ArrowRight") {
+        keys.right = false;
     }
-    if(e.code == "KeyW" || e.code == "ArrowUp"){
+    if (e.code == "KeyW" || e.code == "ArrowUp") {
         keys.up = false;
     }
-    if(e.code == "KeyS" || e.code == "ArrowDown"){
-       keys.down = false;
+    if (e.code == "KeyS" || e.code == "ArrowDown") {
+        keys.down = false;
     }
-    
+
 }
+
+function snapToGrid(x, y) {
+    let col = Math.round(x / blockSize);
+    let row = Math.round(y / blockSize);
+
+    return {
+        x: col * blockSize,
+        y: row * blockSize
+    }
+}
+
+
+function getTime() {
+    setInterval(() => {
+        detik++;
+        let h = Math.floor(detik / 3600);
+        let m = Math.floor((detik % 3600) / 60);
+        let s = detik % 60;
+
+        let formatWaktu = String(h).padStart(2, "0") + ":" +
+            String(m).padStart(2, "0") + ":" +
+            String(s).padStart(2, "0");
+        time = formatWaktu;
+
+    }, 1000)
+}
+
+
