@@ -4,10 +4,15 @@ let buttonPlay = document.getElementById("buttonPlay");
 let buttonIntruction = document.getElementById("buttonIntruction");
 let inputUsername = document.querySelector(".username");
 let inputLevel = document.querySelector(".level");
-let username = "user";
+let username;
 let level;
 let win = false;
+let isStart = false;
 
+// data dog
+let dogs = [];
+let dogCount;
+let isDogMove = false;
 
 // intruction section
 let intructionContainer = document.getElementById("intruction");
@@ -29,6 +34,8 @@ let leaderboardSection = document.getElementById("leaderboard");
 leaderboardSection.style.display = "none";
 let buttonPlayAgain = document.getElementById("playagain")
 let buttonReset = document.getElementById("reset")
+let leaderboardlist = document.getElementById("leaderboardlist");
+let tableLeaderboard = document.getElementById("tableLeaderboard")
 
 
 // button play
@@ -43,6 +50,15 @@ buttonPlay.addEventListener("click", () => {
         canvas.style.display = "inline-block";
         username = inputUsername.value;
         level = inputLevel.value;
+        isStart = true;
+        if (level == "easy") dogCount = 1;
+        if (level == "medium") dogCount = 2;
+        if (level == "hard") dogCount = 3;
+
+        setInterval(() => {
+            isDogMove = true;
+        }, 2000);
+        startGame();
 
         getTime();
 
@@ -60,7 +76,7 @@ canvas.height = canvasHeight;
 
 let ctx = canvas.getContext("2d");
 canvas.style.backgroundColor = "rgba(63, 63, 63, 1)";
-// canvas.style.display = "none";
+canvas.style.display = "none";
 canvas.style.position = "relative";
 let animationId;
 
@@ -72,13 +88,16 @@ let colBlock = 11;
 let rowBlock = 9;
 
 
+
 // data game
 let detik = 0;
+let timerInterval;
 let time;
 let heart = 3;
 let gameOver = false;
 let leaderboard = false;
 let charExplotion = false;
+let charDamage = false;
 let wallCrackGet = 0;
 let tntGet = 0;
 let iceGet = 0;
@@ -89,12 +108,15 @@ let totalHeartItemCount = 1;
 let tntItem = [];
 let iceItem = [];
 let heartItem = [];
+let animationGameoverId;
 
 let numberRandomItem = ["0", "1", "2"]
+let randomDirection = ["R", "L", "U", "D"];
 
 
 // comp game
 let char;
+let charSpeed = 3;
 let keys = {
     up: false,
     down: false,
@@ -136,10 +158,16 @@ let charRightImage;
 let bombImage;
 let explosionImage;
 let heartItemImage;
+let dogDownImage;
+let dogUpImage;
+let dogRightImage;
+let dogLeftImage;
 
 window.onload = () => {
-
-    startGame()
+    if (!localStorage.getItem("leaderboardData")) {
+        localStorage.setItem("leaderboardData", JSON.stringify([]));
+    }
+    startGame();
     document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("keyup", handleKeyUp);
 
@@ -147,13 +175,34 @@ window.onload = () => {
 
 function startGame() {
     loadImages();
-    if (gameOver) {
+    if (gameOver && !isStart || win && !isStart) {
 
-        gameOverSection()
+        gameOverSection();
     } else if (leaderboard) {
         leaderboardSection.style.display = "block";
         canvas.style.display = "none";
-    } else {
+    } else if (isStart) {
+        canvas.style.display = "inline-block";
+        walls = [];
+        stones = [];
+        explosions = [];
+        roads = [];
+        bombs = [];
+        tntItem = [];
+        iceItem = [];
+        heartItem = [];
+        wallCrackGet = 0;
+        time = "";
+        tntGet = 0;
+        iceGet = 0;
+        heartItemGet = 0;
+        heart = 3;
+        detik = 0;
+        time = "00:00:00";
+        win = false;
+        gameOver = false;
+        isStart = false;
+        dogs = [];
         loadGames();
         update();
 
@@ -161,11 +210,11 @@ function startGame() {
 }
 
 function gameOverSection() {
-    requestAnimationFrame(gameOverSection);
+    animationGameoverId = requestAnimationFrame(gameOverSection);
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     ctx.font = "65px arial";
     ctx.fillStyle = "white";
-    ctx.fillText("Game Over!", 320, 150);
+    ctx.fillText(`${win ? "You Win" : "Game Over"} `, 320, 150);
     ctx.font = "20px arial";
     ctx.fillText(`Good job ${username}! your time ${time} with results:`, 300, 200)
 
@@ -199,6 +248,13 @@ function gameOverSection() {
     ctx.font = "20px arial";
     ctx.fillText("Leaderboard", 610, 395);
 
+    if (!gameOver) {
+        cancelAnimationFrame(animationGameoverId)
+        return;
+
+
+    }
+
 }
 
 
@@ -219,10 +275,16 @@ function update() {
         char.stop();
     }
 
-    if(iceGet == totalIceCount && tntGet == totalTntCount && wallCrackGet == wallRandomCount !=0){
+    if (iceGet == totalIceCount && tntGet == totalTntCount && walls.length == 0) {
+        clearInterval(timerInterval)
         win = true;
+        gameOver = false;
+        cancelAnimationFrame(animationId)
+        startGame()
+        return;
     }
-    if(walls.length == 0 || heart <= 0) {
+    else if (heart <= 0) {
+        clearInterval(timerInterval)
         win = false;
         cancelAnimationFrame(animationId)
         gameOver = true;
@@ -261,6 +323,14 @@ function loadImages() {
     explosionImage.src = "./images/duar.jpg";
     heartItemImage = new Image();
     heartItemImage.src = "./images/heart.png";
+    dogUpImage = new Image();
+    dogUpImage.src = "./images/dog_up.png";
+    dogDownImage = new Image();
+    dogDownImage.src = "./images/dog_down.png";
+    dogRightImage = new Image();
+    dogRightImage.src = "./images/dog_right.png";
+    dogLeftImage = new Image();
+    dogLeftImage.src = "./images/dog_left.png";
 
 }
 
@@ -304,13 +374,30 @@ function loadGames() {
         }
     }
 
+    for (let i = 0; i < 100; i++) {
+
+        let random = Math.floor(Math.random() * (roads.length - 5) + 5);
+
+        let dogAwal = roads[random];
+        let checkWall = walls.includes(dogAwal);
+        let checkDog = dogs.includes(dogAwal);
+        if (!checkWall && !checkDog) {
+            dogAwal.image = dogDownImage;
+            dogs.push(dogAwal);
+        }
+        if (dogs.length == dogCount) {
+            break;
+        }
+    }
+
 }
 
 
 function drawMap() {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     ctx.drawImage(backgroundImage, 0, 0, mapWidth, mapHeight);
-    ctx.drawImage(char.image, char.x, char.y, char.width, char.height);
+
+    // ctx.globalAlpha = 0.5;
 
     for (let explosion of explosions) {
         let hitBox = {
@@ -327,9 +414,9 @@ function drawMap() {
             height: char.height - 6
         }
 
-        if (collision(hitBoxChar, hitBox) && !charExplotion) {
+        if (collision(hitBoxChar, hitBox) && !charDamage) {
             heart--;
-            charExplotion = true;
+            charDamage = true;
             break;
         }
     }
@@ -375,7 +462,7 @@ function drawMap() {
                     }
                 }
                 if (numberRandom == 3) {
-                    if (heartItem.length  != totalHeartItemCount) {
+                    if (heartItem.length != totalHeartItemCount) {
 
                         heartItem.push(new Block(heartItemImage, wall.x, wall.y, blockSize, blockSize));
                         break;
@@ -399,41 +486,46 @@ function drawMap() {
             char.x -= char.velocityX;
             char.stop();
         }
+
+        for (let dog of dogs) {
+            dog.dogCheckCollision(wall);
+        }
+
         ctx.drawImage(wallImage, wall.x, wall.y, wall.width, wall.height);
 
     }
 
-    for(let i = iceItem.length -1; i >= 0 ; i--){
+    for (let i = iceItem.length - 1; i >= 0; i--) {
         let ice = iceItem[i];
-         let hitBox = {
+        let hitBox = {
             x: char.x + 3,
             y: char.y + 3,
             width: char.width - 6,
             height: char.height - 6
         }
-        if(collision(hitBox, ice)){
+        if (collision(hitBox, ice)) {
             iceItem.splice(i, 1);
             iceGet++;
             continue;
         }
         ctx.drawImage(ice.image, ice.x, ice.y, ice.width, ice.height);
     }
-    for(let i = tntItem.length - 1; i >= 0; i--){
+    for (let i = tntItem.length - 1; i >= 0; i--) {
         let tnt = tntItem[i];
-         let hitBox = {
+        let hitBox = {
             x: char.x + 3,
             y: char.y + 3,
             width: char.width - 6,
             height: char.height - 6
         }
-        if(collision(hitBox, tnt)){
+        if (collision(hitBox, tnt)) {
             tntItem.splice(i, 1);
             tntGet++;
             continue;
         }
         ctx.drawImage(tnt.image, tnt.x, tnt.y, tnt.width, tnt.height);
     }
-    for(let i = heartItem.length - 1; i >= 0; i--){
+    for (let i = heartItem.length - 1; i >= 0; i--) {
         let heartt = heartItem[i];
         let hitBox = {
             x: char.x + 3,
@@ -441,7 +533,7 @@ function drawMap() {
             width: char.width - 6,
             height: char.height - 6
         }
-        if(collision(hitBox, heartt)){
+        if (collision(hitBox, heartt)) {
             heartItem.splice(i, 1);
             heart--;
             continue;
@@ -452,16 +544,62 @@ function drawMap() {
     for (let i = 0; i < bombs.length; i++) {
         let bomb = bombs[i];
         ctx.drawImage(bomb.image, bomb.x, bomb.y, bomb.width, bomb.height)
+        bomb.trsansisionSize();
     }
 
     for (let explosion of explosions) {
         ctx.drawImage(explosion.image, explosion.x, explosion.y, explosion.width, explosion.height);
     }
 
+
+    for (let i = 0; i < stones.length; i++) {
+        let stone = stones[i];
+        for (let dog of dogs) {
+            dog.dogCheckCollision(stone);
+        }
+    }
+
+    for (let i = dogs.length - 1; i >= 0; i--) {
+        let dog = dogs[i];
+        if (isDogMove) {
+            dog.x += dog.dogVelocityX;
+            dog.y += dog.dogVelocityY;
+        }
+
+    let hitBox = {
+            x: dog.x + 5,
+            y: dog.y + 5,
+            width: dog.width - 10,
+            height: dog.height - 10
+        }
+
+        let hitBoxChar = {
+            x: char.x + 3,
+            y: char.y + 3,
+            width: char.width - 6,
+            height: char.height - 6
+        }
+
+        if (collision(hitBoxChar, hitBox) && !charDamage) {
+            heart--;
+            charDamage = true;
+            setTimeout(() => {
+                charDamage = false;
+            }, 3000);
+            break;
+        }
+
+        
+
+        ctx.drawImage(dog.image, dog.x, dog.y, dog.width, dog.height);
+    }
+
+
+
     ctx.drawImage(bombSkuyImage, canvasWidth - (canvasWidth - 705) + 60, 30, 200, 30);
     ctx.fillStyle = "white";
     ctx.font = "22px arial";
-    ctx.fillText(`Player   : ${username && "User"}`, canvasWidth - (canvasWidth - 705) + 60, 100);
+    ctx.fillText(`Player   : ${username}`, canvasWidth - (canvasWidth - 705) + 60, 100);
     ctx.fillText(`Time     : ${time || "00:00:00"}`, canvasWidth - (canvasWidth - 705) + 60, 130);
 
     for (let i = 0; i < 3; i++) {
@@ -484,6 +622,14 @@ function drawMap() {
     ctx.drawImage(iceImage, canvasWidth - (canvasWidth - 705) + 60, 390, 40, 40);
     ctx.fillText(`=  ${iceGet}`, canvasWidth - (canvasWidth - 705) + 130, 420);
 
+    if(charDamage) {
+        if(Math.floor(Date.now() % 4) === 0 ){
+            ctx.globalAlpha = 0.3;
+        }
+    }
+
+    ctx.drawImage(char.image, char.x, char.y, char.width, char.height);
+    ctx.globalAlpha = 1;
 }
 
 
@@ -506,6 +652,10 @@ function move() {
             char.x -= char.velocityX;
             char.stop();
         }
+
+        // for(let dog of dogs) {
+        //     dog.dogCheckCollision(stone);
+        // }
     }
 
 
@@ -524,29 +674,33 @@ class Block {
         this.startX = x;
         this.startY = y;
         this.direction = "D";
+        this.onLarge = false;
+        this.dogVelocityX = 0;
+        this.dogVelocityY = 2;
+        this.charDogCollision = false;
     }
 
     udpateDirection(direction) {
         this.direction = direction;
         if (direction == "R") {
             this.image = charRightImage;
-            this.velocityX = blockSize / 40;
+            this.velocityX = charSpeed;
             this.velocityY = 0;
         }
         if (direction == "L") {
             this.image = charLeftImage
-            this.velocityX = -blockSize / 40;
+            this.velocityX = -charSpeed;
             this.velocityY = 0;
         }
         if (direction == "U") {
             this.image = charUpImage
             this.velocityX = 0;
-            this.velocityY = -blockSize / 40;
+            this.velocityY = -charSpeed;
         }
         if (direction == "D") {
             this.image = charDownImage;
             this.velocityX = 0;
-            this.velocityY = blockSize / 40;
+            this.velocityY = charSpeed;
         }
 
     }
@@ -556,8 +710,77 @@ class Block {
         this.velocityY = 0;
     }
 
+    trsansisionSize() {
+        if (this.width == blockSize) {
+            this.onLarge = false;
+        }
 
+        if (this.width == blockSize - 10) {
+            this.onLarge = true;
+        }
+
+        if (this.onLarge) {
+            this.width += .5;
+            this.height += .5;
+            this.x -= .25;
+            this.y -= .25;
+        }
+
+        if (!this.onLarge) {
+            this.width -= .5;
+            this.height -= .5;
+            this.x += .25;
+            this.y += .25;
+        }
+
+
+    }
+
+    dogCheckCollision(object) {
+        let hitBox = {
+            x: this.x + 1,
+            y: this.y + 1,
+            width: this.width - 2,
+            height: this.height - 2
+        }
+        if (collision(hitBox, object)) {
+            this.x -= this.dogVelocityX;
+            this.y -= this.dogVelocityY;
+
+            this.x = Math.round(this.x);
+        this.y = Math.round(this.y);
+            this.updateDirectionDog();
+        }
+    }
+
+    updateDirectionDog() {
+        let randomNumber = Math.floor(Math.random() * 4);
+        let direction = randomDirection[randomNumber];
+        if (direction == "R") {
+            this.image = dogRightImage;
+            this.dogVelocityX = 2;
+            this.dogVelocityY = 0;
+        }
+        if (direction == "L") {
+            this.image = dogLeftImage;
+            this.dogVelocityX = -2;
+            this.dogVelocityY = 0;
+        }
+        if (direction == "U") {
+            this.image = dogUpImage;
+            this.dogVelocityX = 0;
+            this.dogVelocityY = -2;
+        }
+        if (direction == "D") {
+            this.image = dogDownImage;
+            this.dogVelocityX = 0
+            this.dogVelocityY = 2;
+        }
+    }
+
+    
 }
+
 
 
 function collision(a, b) {
@@ -634,8 +857,12 @@ function handleKeyDown(e) {
 
                 setTimeout(() => {
                     explosions = [];
-                    charExplotion = false;
-                }, 1000);
+                  
+                }, 500);
+
+                setTimeout(() => {
+                      charDamage = false;
+                }, 3000);
 
 
             }, 5000);
@@ -670,8 +897,9 @@ function snapToGrid(x, y) {
 }
 
 
+
 function getTime() {
-    setInterval(() => {
+    timerInterval = setInterval(() => {
         detik++;
         let h = Math.floor(detik / 3600);
         let m = Math.floor((detik % 3600) / 60);
@@ -685,4 +913,105 @@ function getTime() {
     }, 1000)
 }
 
+
+function isClicked(mouseX, mouseY, btn) {
+    return mouseX >= btn.x && mouseX <= btn.x + btn.width &&
+        mouseY >= btn.y && mouseY <= btn.y + btn.height;
+}
+
+canvas.addEventListener("click", (e) => {
+    if (gameOver || win) {
+        let rect = canvas.getBoundingClientRect();
+
+        let btnSaveScore = { x: 270, y: 370, width: 190, height: 40 };
+        let btnLeaderboard = { x: 570, y: 370, width: 190, height: 40 };
+
+        let mouseX = e.clientX - rect.x;
+        let mouseY = e.clientY - rect.y;
+
+        if (isClicked(mouseX, mouseY, btnSaveScore)) {
+            saveScore()
+        }
+
+        if (isClicked(mouseX, mouseY, btnLeaderboard)) {
+            tampilLeaderboard();
+        }
+    }
+})
+
+function saveScore() {
+    let listData = JSON.parse(localStorage.getItem("leaderboardData")) || [];
+
+    let data = {
+        username: username,
+        time: time,
+        totalWall: wallCrackGet,
+        totalTnt: tntGet,
+        totalIce: iceGet
+    }
+
+    listData.push(data);
+    localStorage.setItem("leaderboardData", JSON.stringify(listData));
+    alert("berhasil menyimpan Score ke leaderboard!");
+    tampilLeaderboard()
+
+}
+
+function tampilLeaderboard() {
+    canvas.style.display = "none";
+    leaderboardSection.style.display = "block";
+    let dataLeaderboard = JSON.parse(localStorage.getItem("leaderboardData")) ?? [];
+    tableLeaderboard.innerHTML = ` <tr>
+                <td>Player Name</td>
+                <td>Time</td>
+                <td><img src="./images/wall_crack.png" alt="" width="35"></td>
+                <td><img src="./images/tnt.png" alt=""></td>
+                <td><img src="./images/ice.png" alt=""></td>
+            </tr>`;
+    dataLeaderboard.forEach((user) => {
+        tableLeaderboard.innerHTML += `
+        <tr>
+            <td>${user.username}</td>
+            <td>${user.time}</td>
+            <td>${user.totalWall}</td>
+            <td>${user.totalTnt}</td>
+            <td>${user.totalIce}</td>
+        </tr>
+        `
+    })
+
+
+}
+
+buttonPlayAgain.addEventListener("click", () => {
+    leaderboardSection.style.display = "none";
+    canvas.style.display = "none";
+    welcomeContainer.style.display = "block";
+    gameOver = false;
+    win = false;
+
+    // isStart = true;
+    cancelAnimationFrame(animationGameoverId);
+    // startGame();
+
+})
+
+buttonReset.addEventListener("click", () => {
+    localStorage.setItem("leaderboardData", JSON.stringify([]));
+    tableLeaderboard.innerHTML = ` <tr>
+                <td>Player Name</td>
+                <td>Time</td>
+                <td><img src="./images/wall_crack.png" alt="" width="35"></td>
+                <td><img src="./images/tnt.png" alt=""></td>
+                <td><img src="./images/ice.png" alt=""></td>
+            </tr>`;
+    alert("berhasil reset data leaderboard")
+
+})
+
+function dogSearchChar() {
+    for (let dog of dogs) {
+
+    }
+}
 
